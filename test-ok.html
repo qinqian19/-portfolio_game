@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的作品集</title>
+    <style>
+        :root {
+            --sidebar-bg: #F0FAFF;
+            --main-bg: #E6F7FF;
+            --primary-blue: #0091FF;
+            --text-dark: #001529;
+            --text-muted: #4F5E6D;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--main-bg);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            width: 1080px;
+            height: 600px;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h1 {
+            font-size: 26px;
+            color: var(--text-dark);
+            margin-bottom: 50px;
+            font-weight: bold;
+        }
+
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .profile-img-container {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            margin-bottom: 40px;
+        }
+
+        .profile-img-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0091FF;
+            border-radius: 50%;
+        }
+
+        .profile-img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid white;
+        }
+
+        .profile-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .info-list {
+            list-style: none;
+            width: 100%;
+        }
+
+        .info-item {
+            margin-bottom: 18px;
+            font-size: 16px;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+
+        .info-label {
+            font-weight: 500;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 50px 40px;
+            background-color: var(--main-bg);
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+
+        .more-dots {
+            display: flex;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .game-thumb {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .game-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .game-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .btn-play {
+            width: 100%;
+            padding: 12px 0;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 145, 255, 0.3);
+        }
+
+        .btn-play:hover {
+            background: #007CE6;
+            transform: scale(1.02);
+        }
+
+        /* Responsive Styles for Mobile */
+        @media (max-width: 768px) {
+            body {
+                /* Allow body to scroll */
+                height: auto;
+                display: block;
+            }
+
+            .container {
+                /* Switch to vertical layout */
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .sidebar, .main-content {
+                width: 100%;
+                padding: 30px 20px; /* Adjust padding for smaller screens */
+            }
+
+            .sidebar h1, .header h2 {
+                text-align: center;
+            }
+
+            .profile-section {
+                align-items: center; /* Center profile content */
+            }
+
+            .game-grid {
+                /* Stack game cards vertically */
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h1>个人简介</h1>
+            
+            <div class="profile-section">
+                <div class="profile-img-container">
+                    <div class="profile-img-bg"></div>
+                    <div class="profile-img">
+                        <!-- 使用 Unsplash 的人像占位图 -->
+                        <img src="head.png" alt="Profile">
+                    </div>
+                </div>
+                
+                <ul class="info-list">
+                    <li class="info-item"><span class="info-label">姓名：</span>XXX</li>
+                    <li class="info-item"><span class="info-label">学校：</span>深圳中学</li>
+                    <li class="info-item"><span class="info-label">年级：</span>初二</li>
+                    <li class="info-item"><span class="info-label">爱好：</span>画画，游戏，旅游</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h2>小游戏作品集</h2>
+                <!--div class="more-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div-->
+            </div>
+
+            <div class="game-grid">
+                <!-- Game Card 1 -->
+                <div class="game-card">
+                    <div class="game-thumb">
+                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Pixel Adventure">
+                    </div>
+                    <div class="game-title">像素冒险</div>
+                    <button class="btn-play" onclick="playGame('像素冒险')">点击试玩</button>
+                </div>
+
+                <!-- Game Card 2 -->
+                <div class="game-card">
+                    <div class="game-thumb">
+                        <img src="https://images.unsplash.com/photo-1614853316476-de00d14cb1fc?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Number Puzzle">
+                    </div>
+                    <div class="game-title">数字解谜</div>
+                    <button class="btn-play" onclick="playGame('数字解谜')">点击试玩</button>
+                </div>
+
+                <!-- Game Card 3 -->
+                <div class="game-card">
+                    <div class="game-thumb">
+                        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Puzzle Challenge">
+                    </div>
+                    <div class="game-title">拼图挑战</div>
+                    <button class="btn-play" onclick="playGame('拼图挑战')">点击试玩</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function playGame(gameName) {
+            alert('正在加载' + gameName + '，请稍候...');
+        }
+    </script>
+</body>
+</html>

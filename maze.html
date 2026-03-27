@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>走迷宫游戏</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            color: #333;
+        }
+        #maze-container {
+            display: grid;
+            border: 2px solid #333;
+            background-color: #fff;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            background-color: #fff;
+        }
+        .cell.wall {
+            background-color: #333;
+        }
+        .cell.player {
+            background-color: #3498db;
+        }
+        .cell.exit {
+            background-color: #2ecc71;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            text-decoration: none;
+            color: #333;
+            background: white;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .back-btn:hover {
+            transform: translateX(-5px);
+            background: #3498db;
+            color: white;
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>走迷宫</h1>
+    <div id="maze-container"></div>
+    <div id="controls">
+        <button onclick="initGame()">重新开始</button>
+    </div>
+    <a href="test.html" class="back-btn">返回主页</a>
+
+    <script>
+        const mazeContainer = document.getElementById('maze-container');
+        const mazeSize = 21; // Must be an odd number
+        let playerPos = { x: 1, y: 1 };
+        let maze = [];
+
+        function initGame() {
+            generateMaze();
+            drawMaze();
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function generateMaze() {
+            // Initialize maze with walls
+            maze = Array.from({ length: mazeSize }, () => Array(mazeSize).fill(1));
+
+            function carve(x, y) {
+                maze[y][x] = 0; // Carve a path
+
+                const directions = [
+                    { x: 0, y: -2 }, { x: 2, y: 0 },
+                    { x: 0, y: 2 }, { x: -2, y: 0 }
+                ];
+                directions.sort(() => Math.random() - 0.5);
+
+                for (const dir of directions) {
+                    const newX = x + dir.x;
+                    const newY = y + dir.y;
+
+                    if (newY > 0 && newY < mazeSize - 1 && newX > 0 && newX < mazeSize - 1 && maze[newY][newX] === 1) {
+                        maze[y + dir.y / 2][x + dir.x / 2] = 0;
+                        carve(newX, newY);
+                    }
+                }
+            }
+
+            carve(1, 1);
+
+            // Set player start and exit
+            playerPos = { x: 1, y: 1 };
+            maze[mazeSize - 2][mazeSize - 2] = 2; // Exit
+        }
+
+        function drawMaze() {
+            mazeContainer.innerHTML = '';
+            mazeContainer.style.gridTemplateColumns = `repeat(${mazeSize}, 20px)`;
+
+            for (let y = 0; y < mazeSize; y++) {
+                for (let x = 0; x < mazeSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (maze[y][x] === 1) {
+                        cell.classList.add('wall');
+                    } else if (maze[y][x] === 2) {
+                        cell.classList.add('exit');
+                    }
+                    if (x === playerPos.x && y === playerPos.y) {
+                        cell.classList.add('player');
+                    }
+                    mazeContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function handleKeyPress(e) {
+            let newX = playerPos.x;
+            let newY = playerPos.y;
+
+            switch (e.key) {
+                case 'ArrowUp': newY--; break;
+                case 'ArrowDown': newY++; break;
+                case 'ArrowLeft': newX--; break;
+                case 'ArrowRight': newX++; break;
+                default: return;
+            }
+
+            if (maze[newY][newX] !== 1) { // Not a wall
+                playerPos = { x: newX, y: newY };
+                drawMaze();
+
+                if (maze[newY][newX] === 2) {
+                    setTimeout(() => {
+                        alert('恭喜你，成功走出迷宫！');
+                        initGame();
+                    }, 100);
+                }
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>

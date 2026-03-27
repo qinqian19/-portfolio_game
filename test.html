@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人网页开发原型</title>
+    <title>我的作品集</title>
+    <!-- 引入 Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --sidebar-bg: #F0FAFF;
@@ -32,11 +34,13 @@
         .container {
             display: flex;
             width: 1080px;
-            height: 600px;
+            min-height: 600px; /* 改为最小高度，允许随内容增长 */
+            height: auto;
             background: white;
             border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            margin: 40px 0; /* 增加上下外边距，防止贴边 */
         }
 
         /* Sidebar Styles */
@@ -160,6 +164,8 @@
             flex-direction: column;
             align-items: center;
             box-shadow: var(--card-shadow);
+            height: fit-content; /* 自动撑开高度 */
+            align-self: flex-start; /* 保持卡片顶部对齐 */
         }
 
         .game-thumb {
@@ -203,13 +209,205 @@
             transform: scale(1.02);
         }
 
-        .footer-tag {
-            position: absolute;
-            bottom: 20px;
-            right: 25px;
-            color: #C0D6E4;
+        /* 互动功能样式 */
+        .card-actions {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            margin-top: 15px;
+            flex-shrink: 0; /* 禁止被压缩 */
+        }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: var(--text-muted);
             font-size: 14px;
-            font-weight: bold;
+            transition: all 0.2s;
+            user-select: none;
+            min-height: 44px; /* 触控区域 */
+            min-width: 44px;
+            justify-content: center;
+        }
+
+        .action-item:hover {
+            color: var(--primary-blue);
+        }
+
+        .action-item.liked {
+            color: #ff4d4f;
+        }
+
+        .action-item svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* 评论弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 24px;
+            color: #999;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-comment-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+
+        .modal-comment-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .modal-comment-list::-webkit-scrollbar-thumb {
+            background: #eee;
+            border-radius: 10px;
+        }
+
+        .modal-comment-input-group {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-comment-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #f9f9f9;
+        }
+
+        .modal-comment-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            background: white;
+        }
+
+        .btn-modal-send {
+            padding: 0 20px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+            animation: fadeInOut 2s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, 20px); }
+            15% { opacity: 1; transform: translate(-50%, 0); }
+            85% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+        /* Responsive Styles for Mobile */
+        @media (max-width: 768px) {
+            body {
+                /* Allow body to scroll */
+                height: auto;
+                display: block;
+            }
+
+            .container {
+                /* Switch to vertical layout */
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .sidebar, .main-content {
+                width: 100%;
+                padding: 30px 20px; /* Adjust padding for smaller screens */
+            }
+
+            .sidebar h1, .header h2 {
+                text-align: center;
+            }
+
+            .profile-section {
+                align-items: center; /* Center profile content */
+            }
+
+            .game-grid {
+                /* Stack game cards vertically */
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
         }
 
     </style>
@@ -217,9 +415,29 @@
 <body>
 
     <div class="container">
+        <!-- Toast 容器 -->
+        <div id="toast" class="toast"></div>
+
+        <!-- 评论弹窗 -->
+        <div id="commentModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">项目评论</h3>
+                    <span class="modal-close" onclick="closeModal()">&times;</span>
+                </div>
+                <div id="modalCommentList" class="modal-comment-list">
+                    <!-- 评论内容由 JS 填充 -->
+                    <p class="loading">正在加载评论...</p>
+                </div>
+                <div class="modal-comment-input-group">
+                    <input type="text" id="modalCommentInput" class="modal-comment-input" placeholder="发表你的评论..." maxlength="140">
+                    <button id="modalSendBtn" class="btn-modal-send" onclick="submitModalComment()">发送</button>
+                </div>
+            </div>
+        </div>
         <!-- Sidebar -->
         <aside class="sidebar">
-            <h1>个人网页开发原型</h1>
+            <h1>个人简介</h1>
             
             <div class="profile-section">
                 <div class="profile-img-container">
@@ -232,9 +450,9 @@
                 
                 <ul class="info-list">
                     <li class="info-item"><span class="info-label">姓名：</span>XXX</li>
-                    <li class="info-item"><span class="info-label">专业：</span>网页开发</li>
-                    <li class="info-item"><span class="info-label">技能：</span>HTML/CSS/JavaScript</li>
-                    <li class="info-item"><span class="info-label">项目经验：</span>3年前端开发经验，独立完成5个网页原型</li>
+                    <li class="info-item"><span class="info-label">学校：</span>深圳中学</li>
+                    <li class="info-item"><span class="info-label">年级：</span>初二</li>
+                    <li class="info-item"><span class="info-label">爱好：</span>画画，游戏，旅游</li>
                 </ul>
             </div>
         </aside>
@@ -242,51 +460,323 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
-                <h2>小游戏作品集</h2>
-                <div class="more-dots">
+                <h2>我作品集</h2>
+                <!--di  v class="more-dots">
                     <span class="dot"></span>
                     <span class="dot"></span>
                     <span class="dot"></span>
-                </div>
+                </div-->
             </div>
 
             <div class="game-grid">
                 <!-- Game Card 1 -->
-                <div class="game-card">
+                <div class="game-card" data-project-id="1">
                     <div class="game-thumb">
                         <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Pixel Adventure">
                     </div>
-                    <div class="game-title">游戏1：像素冒险</div>
-                    <button class="btn-play" onclick="playGame('像素冒险')">点击试玩</button>
+                    <div class="game-title">塔罗牌占卜</div>
+                    <button class="btn-play" onclick="playGame('塔罗牌占卜')">点击试玩</button>
+                    
+                    <div class="card-actions">
+                        <div class="action-item" onclick="toggleLike(1, this)">
+                            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span class="count like-count">0</span>
+                        </div>
+                        <div class="action-item" onclick="openCommentModal(1, '塔罗牌占卜')">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
+                            <span class="count comment-count">0</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Game Card 2 -->
-                <div class="game-card">
+                <div class="game-card" data-project-id="2">
                     <div class="game-thumb">
                         <img src="https://images.unsplash.com/photo-1614853316476-de00d14cb1fc?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Number Puzzle">
                     </div>
-                    <div class="game-title">游戏2：数字解谜</div>
-                    <button class="btn-play" onclick="playGame('数字解谜')">点击试玩</button>
+                    <div class="game-title">走迷宫</div>
+                    <button class="btn-play" onclick="playGame('走迷宫')">点击试玩</button>
+                    
+                    <div class="card-actions">
+                        <div class="action-item" onclick="toggleLike(2, this)">
+                            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span class="count like-count">0</span>
+                        </div>
+                        <div class="action-item" onclick="openCommentModal(2, '走迷宫')">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
+                            <span class="count comment-count">0</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Game Card 3 -->
-                <div class="game-card">
+                <div class="game-card" data-project-id="3">
                     <div class="game-thumb">
                         <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Puzzle Challenge">
                     </div>
-                    <div class="game-title">游戏3：拼图挑战</div>
-                    <button class="btn-play" onclick="playGame('拼图挑战')">点击试玩</button>
+                    <div class="game-title">投他一票</div>
+                    <button class="btn-play" onclick="playGame('投他一票')">点击试玩</button>
+                    
+                    <div class="card-actions">
+                        <div class="action-item" onclick="toggleLike(3, this)">
+                            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span class="count like-count">0</span>
+                        </div>
+                        <div class="action-item" onclick="openCommentModal(3, '投他一票')">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/></svg>
+                            <span class="count comment-count">0</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="footer-tag">豆包AI生成</div>
         </main>
     </div>
 
     <script>
-        function playGame(gameName) {
-            alert('正在加载' + gameName + '，请稍候...');
+        // 1. 初始化 Supabase
+        const supabaseUrl = 'https://aptzebyzzftinevfbchf.supabase.co';
+        const supabaseKey = 'sb_publishable_p0ZjxyVWtmCKERr8HOZN0w_w5CEVJw9';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 获取设备标识
+        let userIdentifier = localStorage.getItem('user_identifier');
+        if (!userIdentifier) {
+            userIdentifier = 'dev_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('user_identifier', userIdentifier);
         }
+
+        // 防抖函数
+        function debounce(fn, delay) {
+            let timer = null;
+            return function() {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, arguments), delay);
+            }
+        }
+
+        // Toast 提示
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        // 2. 加载互动数据
+        async function loadInteractions() {
+            try {
+                // 获取所有点赞和评论
+                const { data, error } = await _supabase
+                    .from('interactions')
+                    .select('*');
+
+                if (error) throw error;
+
+                // 按 project_id 汇总
+                const stats = {
+                    1: { likes: 0, comments: 0, myLike: false, commentList: [] },
+                    2: { likes: 0, comments: 0, myLike: false, commentList: [] },
+                    3: { likes: 0, comments: 0, myLike: false, commentList: [] }
+                };
+
+                data.forEach(item => {
+                    const pid = item.project_id;
+                    if (!stats[pid]) return;
+
+                    if (item.type === 'like') {
+                        stats[pid].likes++;
+                        if (item.user_identifier === userIdentifier) {
+                            stats[pid].myLike = true;
+                        }
+                    } else if (item.type === 'comment') {
+                        stats[pid].comments++;
+                        stats[pid].commentList.push(item);
+                    }
+                });
+
+                // 更新卡片上的统计数据
+                for (let pid in stats) {
+                    const card = document.querySelector(`.game-card[data-project-id="${pid}"]`);
+                    if (!card) continue;
+
+                    card.querySelector('.like-count').innerText = stats[pid].likes;
+                    card.querySelector('.comment-count').innerText = stats[pid].comments;
+                    
+                    const likeBtn = card.querySelector('.action-item:first-child');
+                    if (stats[pid].myLike) {
+                        likeBtn.classList.add('liked');
+                    } else {
+                        likeBtn.classList.remove('liked');
+                    }
+                }
+
+                // 如果弹窗开启，同步更新弹窗内的评论列表
+                if (currentModalProjectId) {
+                    renderModalComments(stats[currentModalProjectId].commentList);
+                }
+            } catch (err) {
+                console.error('加载失败:', err);
+            }
+        }
+
+        // HTML 转义防止 XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 3. 点赞功能 (防抖)
+        const toggleLike = debounce(async (projectId, el) => {
+            const isLiked = el.classList.contains('liked');
+            
+            try {
+                if (isLiked) {
+                    // 取消点赞
+                    const { error } = await _supabase
+                        .from('interactions')
+                        .delete()
+                        .match({ 
+                            project_id: projectId, 
+                            type: 'like', 
+                            user_identifier: userIdentifier 
+                        });
+                    if (error) throw error;
+                    el.classList.remove('liked');
+                } else {
+                    // 添加点赞
+                    const { error } = await _supabase
+                        .from('interactions')
+                        .insert([{ 
+                            project_id: projectId, 
+                            type: 'like', 
+                            user_identifier: userIdentifier 
+                        }]);
+                    if (error) throw error;
+                    el.classList.add('liked');
+                }
+                loadInteractions(); // 重新加载计数
+            } catch (err) {
+                showToast('操作失败，请重试');
+                console.error(err);
+            }
+        }, 300);
+
+        // 弹窗相关状态
+        let currentModalProjectId = null;
+
+        // 打开评论弹窗
+        function openCommentModal(projectId, projectName) {
+            currentModalProjectId = projectId;
+            document.getElementById('modalTitle').innerText = `${projectName} - 评论区`;
+            document.getElementById('commentModal').style.display = 'flex';
+            document.getElementById('modalCommentInput').value = '';
+            loadInteractions(); // 刷新数据
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('commentModal').style.display = 'none';
+            currentModalProjectId = null;
+        }
+
+        // 渲染弹窗评论
+        function renderModalComments(comments) {
+            const listContainer = document.getElementById('modalCommentList');
+            if (comments.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">暂无评论，快来抢沙发吧~</p>';
+                return;
+            }
+
+            const sortedComments = comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            listContainer.innerHTML = sortedComments.map(c => `
+                <div class="comment-item">
+                    <div class="comment-content">${escapeHtml(c.content)}</div>
+                    <div class="comment-time">${new Date(c.created_at).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        // 提交弹窗评论
+        async function submitModalComment() {
+            if (!currentModalProjectId) return;
+
+            const input = document.getElementById('modalCommentInput');
+            const content = input.value.trim();
+
+            if (!content) {
+                showToast('评论内容不能为空');
+                return;
+            }
+
+            if (content.length > 140) {
+                showToast('评论字数不能超过140字');
+                return;
+            }
+
+            // 简单敏感词过滤示例
+            const sensitiveWords = ['垃圾', '暴力', '广告'];
+            if (sensitiveWords.some(w => content.includes(w))) {
+                showToast('内容包含敏感词，请修改');
+                return;
+            }
+
+            const sendBtn = document.getElementById('modalSendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerText = '发送中...';
+
+            try {
+                const { error } = await _supabase
+                    .from('interactions')
+                    .insert([{ 
+                        project_id: currentModalProjectId, 
+                        type: 'comment', 
+                        content: content,
+                        user_identifier: userIdentifier
+                    }]);
+
+                if (error) throw error;
+
+                input.value = '';
+                showToast('评论成功');
+                await loadInteractions();
+            } catch (err) {
+                showToast('发送失败，请重试');
+                console.error(err);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerText = '发送';
+            }
+        }
+
+        // 点击遮罩层关闭弹窗
+        window.onclick = function(event) {
+            const modal = document.getElementById('commentModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        function playGame(gameName) {
+            if (gameName === '塔罗牌占卜') {
+                window.location.href = 'cardgame.html';
+            } else if (gameName === '走迷宫') {
+                window.location.href = 'maze.html';
+            }else if(gameName === '投他一票'){
+                window.location.href = 'vote.html';
+            }
+             else {
+                alert('正在加载' + gameName + '，请稍候...');
+            }
+        }
+
+        // 页面加载后执行
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInteractions();
+            
+            // 每 10 秒自动刷新一次数据 (可选)
+            // setInterval(loadInteractions, 10000);
+        });
     </script>
 </body>
 </html>

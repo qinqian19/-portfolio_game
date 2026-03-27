@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>塔罗牌占卜 - 发现你的未来</title>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --accent-color: #ffd700;
+            --text-color: #e0e0e0;
+            --card-back: #1a1f2c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .instruction {
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .cards-area {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            perspective: 1000px;
+        }
+
+        .card {
+            width: 120px;
+            height: 200px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card.flipped {
+            transform: rotateY(180px);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            border: 2px solid var(--accent-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            background-image: radial-gradient(circle, #2a334a 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .card-back::after {
+            content: "✨";
+            font-size: 2rem;
+        }
+
+        .card-front {
+            background-color: #fff;
+            color: #333;
+            transform: rotateY(180deg);
+        }
+
+        .card-img {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .card-name {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .result-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-title {
+            color: var(--accent-color);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .result-desc {
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .btn-reset {
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .btn-back {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            text-decoration: none;
+            color: #333;
+            background: white;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .btn-back:hover {
+            transform: translateX(-5px);
+            background: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: 0 6px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                width: 90px;
+                height: 150px;
+            }
+            .card-img { font-size: 2rem; }
+            .card-name { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <a href="test.html" class="btn-back">返回主页</a>
+
+    <h1>塔罗牌占卜</h1>
+
+    <div class="game-container">
+        <p class="instruction" id="instruction">请在心中默念你的问题，然后选择一张牌</p>
+
+        <div class="cards-area" id="cardsArea">
+            <!-- 牌由 JS 生成 -->
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+            <h3 class="result-title" id="resultTitle">解读结果</h3>
+            <p class="result-desc" id="resultDesc"></p>
+            <button class="btn-reset" onclick="initGame()">重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        const cardsData = [
+            { name: "愚者", img: "🃏", desc: "象征着新的开始、无限的可能性和自发的冒险。这是一个提醒你保持好奇心和勇气的信号。" },
+            { name: "魔术师", img: "🪄", desc: "代表创造力、行动力和潜力的转化。你拥有解决问题所需的全部工具，只需去运用它们。" },
+            { name: "女祭司", img: "🌙", desc: "象征直觉、潜意识和神秘。现在是向内探索，倾听内心声音的时候。" },
+            { name: "皇后", img: "👑", desc: "代表丰盛、滋养和创造力。生命中正充满生机，是适合孕育新计划的时机。" },
+            { name: "皇帝", img: "⚔️", desc: "象征权威、结构和稳定。需要理性和纪律来掌控当前的局面。" },
+            { name: "恋人", img: "❤️", desc: "代表选择、和谐与价值观的对齐。不仅仅是爱情，更是一种深层的灵魂契合与决断。" },
+            { name: "死神", img: "💀", desc: "并非肉体死亡，而是彻底的终结与新生。告别旧的事物，迎接崭新的转变。" },
+            { name: "太阳", img: "☀️", desc: "象征成功、喜悦和光明。你正处于充满正能量的阶段，一切都会变得明朗。" }
+        ];
+
+        let canClick = true;
+
+        function initGame() {
+            const cardsArea = document.getElementById('cardsArea');
+            const resultPanel = document.getElementById('resultPanel');
+            const instruction = document.getElementById('instruction');
+            
+            cardsArea.innerHTML = '';
+            resultPanel.style.display = 'none';
+            instruction.style.opacity = '0.8';
+            canClick = true;
+
+            // 随机选出 3 张牌
+            const shuffled = [...cardsData].sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, 3);
+
+            selected.forEach((data, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-face card-back"></div>
+                    <div class="card-face card-front">
+                        <div class="card-img">${data.img}</div>
+                        <div class="card-name">${data.name}</div>
+                    </div>
+                `;
+                card.onclick = () => flipCard(card, data);
+                cardsArea.appendChild(card);
+            });
+        }
+
+        function flipCard(cardElement, data) {
+            if (!canClick || cardElement.classList.contains('flipped')) return;
+            
+            canClick = false;
+            cardElement.style.transform = 'rotateY(180deg)';
+            cardElement.classList.add('flipped');
+
+            // 显示结果
+            setTimeout(() => {
+                const resultPanel = document.getElementById('resultPanel');
+                const resultTitle = document.getElementById('resultTitle');
+                const resultDesc = document.getElementById('resultDesc');
+                const instruction = document.getElementById('instruction');
+
+                resultTitle.innerText = `你抽到了：${data.name}`;
+                resultDesc.innerText = data.desc;
+                resultPanel.style.display = 'block';
+                instruction.style.opacity = '0';
+                
+                // 滚动到结果区
+                resultPanel.scrollIntoView({ behavior: 'smooth' });
+            }, 600);
+        }
+
+        // 初始化
+        initGame();
+    </script>
+</body>
+</html>
